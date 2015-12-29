@@ -29,7 +29,6 @@ import java.awt.Color;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -80,7 +79,7 @@ public class ServerMode extends Thread {
                 synchronized(handlerClient) {
                 
                     handlerClient.start();
-                    handlerClient.wait();
+                    //handlerClient.wait();
                     sleep(1000);
                     listClients.put(handlerClient.getID(), handlerClient);
                 }
