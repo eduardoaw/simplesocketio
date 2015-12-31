@@ -37,7 +37,7 @@ public class MessageUtil {
     
     public static String getTimeStamp() {
         
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");  
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd HH:mm:ss");  
         Date date = new Date();  
         return dateFormat.format(date);        
     }

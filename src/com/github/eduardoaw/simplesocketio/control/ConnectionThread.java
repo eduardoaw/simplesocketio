@@ -26,7 +26,9 @@ package com.github.eduardoaw.simplesocketio.control;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 
@@ -38,8 +40,8 @@ import java.net.Socket;
 public class ConnectionThread extends Thread {
 
     private Socket socket = null;
-    private BufferedReader bufIn = null;
-    private DataOutputStream dataOut = null;
+    private InputStream in = null;
+    private OutputStream out = null;
     private boolean runThread = false;
     private String idConn;
     private Object obj;
@@ -63,17 +65,23 @@ public class ConnectionThread extends Thread {
             
             obj.getClass().getMethod("setNameThreadConn", String.class, ConnectionThread.class).invoke(obj, idConn, this);
             
-            bufIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            dataOut = new DataOutputStream(socket.getOutputStream());
+            in = socket.getInputStream();
+            out = socket.getOutputStream();
 
             runThread = true;
             obj.getClass().getMethod("addConnection", String.class, ConnectionThread.class).invoke(obj, idConn, this);
             
             while (socket.isConnected() && runThread) {
 
-                String inString = "";
-                while ((inString = bufIn.readLine()) == null);
-                obj.getClass().getMethod("printMsgReceived", String.class, String.class).invoke(obj, idConn, inString);
+                byte[] buf = new byte[1024];
+                int bytes_read = 0;
+                
+                bytes_read = in.read(buf, 0, buf.length);
+                if (bytes_read < 0) {
+                    runThread = false;
+                }
+                
+                obj.getClass().getMethod("printMsgReceived", String.class, String.class).invoke(obj, idConn, new String(buf, 0, bytes_read));
             }
 
             obj.getClass().getMethod("clearDisconnected", String.class).invoke(obj, idConn);
@@ -99,10 +107,12 @@ public class ConnectionThread extends Thread {
     public void sendMessage(String msg) {
 
         boolean send = false;
-        if (dataOut != null && socket.isConnected()) {
+        if (out != null && socket.isConnected()) {
 
+            byte[] b = msg.getBytes();
             try {
-                dataOut.writeBytes(msg + "\r\n");
+                out.write(b, 0, b.length);
+                out.flush();
                 send = true;
             } catch (IOException e) {
                 e.printStackTrace();
