@@ -22,29 +22,24 @@
 * SOFTWARE.
 */
 
-package io.github.eduardoaw.simplesocketio.control;
+package com.github.eduardoaw.simplesocketio.model;
 
-import io.github.eduardoaw.simplesocketio.SimpleSocketIOView;
-import java.net.Socket;
-import java.util.HashMap;
+import com.github.eduardoaw.simplesocketio.control.ConnectionThread;
 
 /**
  *
  * @author Eduardo Adams Wohlfahrt
  * @date   2015-12-29
  */
-public class ClientMode implements Runnable {
 
-    private SimpleSocketIOView sView;
-    private HashMap<String, ClientThread> listClients = null;
+public interface Mode {
     
-    public ClientMode(SimpleSocketIOView sView) {
-        this.sView = sView;
-    }
-
-    @Override
-    public void run() {
-        
-    }
-    
+    public void addConnection(String idConn, ConnectionThread handlerConn); 
+    public void setNameThreadConn(String idConn, ConnectionThread handlerConn);
+    public void printMsgReceived(String idConn, String msg);
+    public void printMsgSend(String idConn, String msg, boolean send);
+    public void clearDisconnected(String idConn);
+    public void send(String id, String msg);
+    public void disconnect(String id);
+    public void close();
 }

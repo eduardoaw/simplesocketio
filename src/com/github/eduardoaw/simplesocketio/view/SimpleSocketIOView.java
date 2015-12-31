@@ -22,11 +22,11 @@
 * SOFTWARE.
 */
 
-package io.github.eduardoaw.simplesocketio;
+package com.github.eduardoaw.simplesocketio.view;
 
-import io.github.eduardoaw.simplesocketio.control.ClientMode;
-import io.github.eduardoaw.simplesocketio.control.ServerMode;
-import io.github.eduardoaw.simplesocketio.model.MessageUtil;
+import com.github.eduardoaw.simplesocketio.control.ClientMode;
+import com.github.eduardoaw.simplesocketio.control.ServerMode;
+import com.github.eduardoaw.simplesocketio.util.MessageUtil;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -67,7 +67,7 @@ public class SimpleSocketIOView extends JFrame {
     private StyledDocument docServerRec;
 
     private ClientMode cMode;
-    private JTextField fieldRemoteIP;
+    private JTextField fieldRemoteHost;
     private JTextField fieldRemotePort;
     private JTextPane textAreaClientRec;
     private JTextPane textAreaClientSend;
@@ -152,7 +152,6 @@ public class SimpleSocketIOView extends JFrame {
                         sMode = new ServerMode(sView);
                         sMode.setName("Server Mode");
                         sMode.start();
-                        setMessageServerRec(new Color(255, 180, 0), "Listen on socket at " + fieldLocalPort.getText(), null, null);
                     }
                     else {
                         resetServer("Close Listen", false);
@@ -179,8 +178,8 @@ public class SimpleSocketIOView extends JFrame {
         btnServerDisconnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(sMode != null && listModelServer.getSize() > 0) {           
-                    sMode.disconnectClient(jListSever.getSelectedValue().toString());
+                if(sMode != null) {           
+                    sMode.disconnect(jListSever.getSelectedValue().toString());
                 }
             }
         });
@@ -207,11 +206,9 @@ public class SimpleSocketIOView extends JFrame {
         btnServerSend.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
-                if(listModelServer.getSize() > 0) {                
-                    sMode.sendToClient(jListSever.getSelectedValue().toString(), textAreaServerSend.getText());
-                    textAreaServerSend.setText("");
-                }
+         
+                sMode.send(jListSever.getSelectedValue().toString(), textAreaServerSend.getText());
+                textAreaServerSend.setText("");
             }
         });
         panelServer.add(btnServerSend);
@@ -222,13 +219,13 @@ public class SimpleSocketIOView extends JFrame {
         panelClient = new JPanel();
         panelClient.setLayout(null);
 
-        JLabel labelRemoteIP = new JLabel("Remote IP:");
-        labelRemoteIP.setBounds(10, 15, 150, 20);
-        panelClient.add(labelRemoteIP);
+        JLabel labelRemoteHost = new JLabel("Remote Host:");
+        labelRemoteHost.setBounds(10, 15, 150, 20);
+        panelClient.add(labelRemoteHost);
 
-        fieldRemoteIP = new JTextField();
-        fieldRemoteIP.setBounds(10, 35, 150, 20);
-        panelClient.add(fieldRemoteIP);
+        fieldRemoteHost = new JTextField();
+        fieldRemoteHost.setBounds(10, 35, 150, 20);
+        panelClient.add(fieldRemoteHost);
 
         JLabel labelRemotePort = new JLabel("Remote port:");
         labelRemotePort.setBounds(10, 60, 150, 20);
@@ -241,33 +238,48 @@ public class SimpleSocketIOView extends JFrame {
         btnClientConnect = new JButton();
         btnClientConnect.setBounds(10, 110, 150, 25);
         btnClientConnect.setText("Connect");
-
         btnClientConnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (fieldRemoteIP.getText().trim().equals("")) {
-                    JOptionPane.showMessageDialog(null, "Remote IP is required", "Alert", JOptionPane.PLAIN_MESSAGE);                
+                if (fieldRemoteHost.getText().trim().equals("")) {
+                    JOptionPane.showMessageDialog(null, "Remote Host is required", "Alert", JOptionPane.PLAIN_MESSAGE);                
                 } else if (fieldRemotePort.getText().trim().equals("")) {
                     JOptionPane.showMessageDialog(null, "Remote Port is required", "Alert", JOptionPane.PLAIN_MESSAGE);
-                } else if (!validateIntegerInput(fieldLocalPort.getText())) {
-                    JOptionPane.showMessageDialog(null, "Value not valid from Local Port", "Alert", JOptionPane.PLAIN_MESSAGE);
+                } else if (!validateIntegerInput(fieldRemotePort.getText())) {
+                    JOptionPane.showMessageDialog(null, "Value not valid from Remote Port", "Alert", JOptionPane.PLAIN_MESSAGE);
                     fieldLocalPort.setText("");
                 } else {
-
+                    if(cMode == null) {
+                        cMode = new ClientMode(sView);
+                    }
+                    cMode.connectToServer();
                 }
             }
         });
         panelClient.add(btnClientConnect);
         
+        btnClientDisconnectAll = new JButton();
+        btnClientDisconnectAll.setBounds(10, 140, 150, 25);
+        btnClientDisconnectAll.setText("Disconnect All");
+        btnClientDisconnectAll.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(cMode != null) {           
+                    resetClient("Close connections", false);
+                }
+            }
+        });
+        panelClient.add(btnClientDisconnectAll);                  
+
         JLabel labelListClient = new JLabel("Connected Servers:");
-        labelListClient.setBounds(10, 155, 150, 20);
+        labelListClient.setBounds(10, 175, 150, 20);
         panelClient.add(labelListClient);        
         
         listModelClient = new DefaultListModel();
-        
+
         jListClient = new JList(listModelClient);
         JScrollPane scrollPaneList = new JScrollPane(jListClient);
-        scrollPaneList.setBounds(10, 180, 150, 260);
+        scrollPaneList.setBounds(10, 195, 150, 250);
         panelClient.add(scrollPaneList);
         
         btnClientDisconnect = new JButton();
@@ -277,7 +289,7 @@ public class SimpleSocketIOView extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(cMode != null && listModelClient.getSize() > 0) {           
-                    //cMode.disconnectClient(jListClient.getSelectedValue().toString());
+                    cMode.disconnect(jListClient.getSelectedValue().toString());
                 }
             }
         });
@@ -306,7 +318,7 @@ public class SimpleSocketIOView extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 
                 if(listModelClient.getSize() > 0) {                
-                    //cMode.sendToClient(jListClient.getSelectedValue().toString(), textAreaClientSend.getText());
+                    cMode.send(jListClient.getSelectedValue().toString(), textAreaClientSend.getText());
                     textAreaClientSend.setText("");
                 }
             }
@@ -319,6 +331,12 @@ public class SimpleSocketIOView extends JFrame {
         panelAbout = new JPanel();
         panelAbout.setLayout(null);
 
+        JTextPane jPaneAbout = new JTextPane();
+        jPaneAbout.setText("This software is developed by Eduardo Adams Wohlfahrt and is licensed under the MIT license https://opensource.org/licenses/MIT \r\n"
+                + "Contribute to the project by accessing https://github.com/eduardoaw/simplesocketio \r\n"
+                + "Find use cases of this tool on my page http://eduardoaw.github.io");
+        jPaneAbout.setBounds(10, 15, 950, 60);
+        panelAbout.add(jPaneAbout);        
     }
 
     private boolean validateIntegerInput(String value) {
@@ -343,32 +361,57 @@ public class SimpleSocketIOView extends JFrame {
         return i;
     }    
     
-    public synchronized void setMessageServerRec(Color colorMsg, String message, Color colorData, String data) {
+    public void setMessageServerRec(Color colorMsg, String message, Color colorData, String data) {
+        setMessageRec(colorMsg, message, colorData, data, textAreaServerRec, docServerRec);
+    }
+
+    public void setMessageClientRec(Color colorMsg, String message, Color colorData, String data) {
+        setMessageRec(colorMsg, message, colorData, data, textAreaClientRec, docClientRec);
+    }    
+    
+    private void setMessageRec(Color colorMsg, String message, Color colorData, String data, JTextPane textAreaRec, StyledDocument doc) {
         
-        Style style = textAreaServerRec.addStyle("Custom Style", null);
+        Style style = textAreaRec.addStyle("Custom Style", null);
         StyleConstants.setBackground(style, colorMsg);
 
         try { 
             if(colorData == null && (data == null || data.equals(""))) {
-                docServerRec.insertString(docServerRec.getLength(), MessageUtil.getTimeStamp() + " - " + message + "\r\n", style); 
+                doc.insertString(doc.getLength(), MessageUtil.getTimeStamp() + " - " + message + "\r\n", style); 
             }
             else {
-                docServerRec.insertString(docServerRec.getLength(), MessageUtil.getTimeStamp() + " - " + message, style); 
+                doc.insertString(doc.getLength(), MessageUtil.getTimeStamp() + " - " + message, style); 
                 StyleConstants.setBackground(style, colorData);        
-                docServerRec.insertString(docServerRec.getLength(), data + "\r\n", style); 
+                doc.insertString(doc.getLength(), data + "\r\n", style); 
             }
         }
         catch (BadLocationException e){
             e.printStackTrace();
         }
     }
-
-    public synchronized int getPort() {
+    
+    public int getLocalPort() {
         
         return Integer.parseInt(fieldLocalPort.getText());
     }
+    
+    public int getRemotePort() {
+        
+        return Integer.parseInt(fieldRemotePort.getText());
+    }    
 
-    public synchronized void resetServer(String msg, boolean dialog) {
+    public String getRemoteHost() {
+        
+        return fieldRemoteHost.getText();
+    }    
+    
+    
+    public void clearInputsClientMode() {
+        
+        fieldRemoteHost.setText("");
+        fieldRemotePort.setText("");
+    }    
+    
+    public void resetServer(String msg, boolean dialog) {
         
         setMessageServerRec(new Color(219, 204, 204), msg, null, null);
         btnServerListen.setText("Listen");
@@ -379,17 +422,47 @@ public class SimpleSocketIOView extends JFrame {
             JOptionPane.showMessageDialog(null, msg, "Alert", JOptionPane.PLAIN_MESSAGE);
     }
     
-    public synchronized void addClientList(String id) {
+    public void resetClient(String msg, boolean dialog) {
         
-        listModelServer.addElement(id);
-        jListSever.setSelectedIndex(getIndexJList(id));
+        setMessageClientRec(new Color(219, 204, 204), msg, null, null);
+        cMode.close();
+        cMode = null;
+        listModelClient.clear();
+        if(dialog)
+            JOptionPane.showMessageDialog(null, msg, "Alert", JOptionPane.PLAIN_MESSAGE);
+    }    
+
+    public void addServerList(String id) {
+        
+        addList(id, listModelServer, jListSever);
+    }    
+    
+    public void addClientList(String id) {
+
+        addList(id, listModelClient, jListClient);
     }
     
-    public synchronized void removeClientList(String id) {
+    private void addList(String id, DefaultListModel listModel, JList jList) {
+        
+        listModel.addElement(id);
+        jList.setSelectedIndex(getIndexJList(id));
+    }
+    
+    public void removeServerList(String id) {
 
-        listModelServer.removeElement(id);
-        if(listModelServer.getSize() > 0)
-             jListSever.setSelectedIndex(0);
+        removeList(id, listModelClient, jListClient);
+    }        
+    
+    public void removeClientList(String id) {
+
+        removeList(id, listModelServer, jListSever);
+    }
+    
+    private void removeList(String id, DefaultListModel listModel, JList jList) {
+        
+        listModel.removeElement(id);
+        if(listModel.getSize() > 0)
+             jList.setSelectedIndex(0);
     }
     
     public static void main(String args[]) {

@@ -22,7 +22,7 @@
 * SOFTWARE.
 */
 
-package io.github.eduardoaw.simplesocketio.model;
+package com.github.eduardoaw.simplesocketio.util;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -35,11 +35,6 @@ import java.util.Date;
  */
 public class MessageUtil {
     
-    public static String ALERT = "Alert";
-    public static String WARNING = "Waring";
-    public static String RECEIVED = "Received from ";
-    public static String SENDING = "Sending to ";
-
     public static String getTimeStamp() {
         
         DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");  
