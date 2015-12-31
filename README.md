@@ -10,4 +10,4 @@ Feel the will to assist in the project, all help will be appreciated.
 Below is a gif demonstrative tool.
 ![Demonstrative steps](files/gif_simple_socket_io_v1.gif)
 
-You can download Simple Socket IO [here](files/SimpleSocketIO.jar).
+You can download Simple Socket IO [here](https://raw.githubusercontent.com/eduardoaw/simplesocketio/master/files/SimpleSocketIO.jar).
